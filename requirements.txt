@@ -1,0 +1,8 @@
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+PyJWT==2.8.0
+pyotp==2.9.0
+Werkzeug==3.0.1
+schedule==1.2.2
+waitress==3.0.2
+psutil==5.9.8

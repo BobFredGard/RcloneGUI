@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rclone Backup Manager</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="shortcut icon" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen">
+            <div class="login-window">
+                <h1>Rclone Backup</h1>
+                <p class="subtitle">Gestionnaire de sauvegardes</p>
+
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="username">Utilisateur</label>
+                        <input type="text" id="username" placeholder="admin" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Mot de passe</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Se connecter</button>
+                    <p id="login-error" class="error-message"></p>
+                </form>
+
+                <p class="switch-link">Pas de compte? <a href="#" id="show-register">Créer un compte</a></p>
+            </div>
+        </div>
+
+        <!-- Register Screen -->
+        <div id="register-screen" class="screen hidden">
+            <div class="login-window">
+                <h1>Créer un compte</h1>
+                <p class="subtitle">Pour commencer</p>
+
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="reg-username">Utilisateur</label>
+                        <input type="text" id="reg-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-password">Mot de passe</label>
+                        <input type="password" id="reg-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">S'inscrire</button>
+                    <p id="register-error" class="error-message"></p>
+                </form>
+
+                <p class="switch-link"><a href="#" id="show-login">Retour à la connexion</a></p>
+            </div>
+        </div>
+
+        <!-- Main App Screen -->
+        <div id="main-screen" class="screen hidden">
+            <div class="app-container">
+                <!-- Sidebar -->
+                <aside class="sidebar">
+                    <div class="sidebar-header">
+                        <h1>Rclone Backup</h1>
+                        <span class="version">v1.0</span>
+                    </div>
+
+                    <nav class="sidebar-nav">
+                        <a class="nav-item active" data-tab="backups">
+                            <span class="icon">💾</span>
+                            Sauvegardes
+                        </a>
+                        <a class="nav-item" data-tab="connections">
+                            <span class="icon">☁️</span>
+                            Connexions
+                        </a>
+                        <a class="nav-item" data-tab="logs">
+                            <span class="icon">📋</span>
+                            Rapports
+                        </a>
+                    </nav>
+
+                    <div class="sidebar-footer">
+                        <a class="nav-item" id="logout-btn">
+                            <span class="icon">↩️</span>
+                            Déconnexion
+                        </a>
+                    </div>
+                </aside>
+
+                <!-- Main Content -->
+                <main class="main-content">
+                    <!-- Backups Tab -->
+                    <section id="backups-tab" class="tab-content active">
+                        <div class="main-header">
+                            <h2>Sauvegardes</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-secondary" id="export-backups-btn">📤 Exporter</button>
+                                <button class="btn btn-secondary" id="import-backups-btn">📥 Importer</button>
+                                <button class="btn btn-primary" id="new-backup-btn">+ Nouvelle sauvegarde</button>
+                            </div>
+                        </div>
+
+                        <!-- Backup Form (Hidden) -->
+                        <div id="backup-form-panel" class="panel hidden">
+                            <div class="panel-header">
+                                <h3>Nouvelle sauvegarde</h3>
+                                <button type="button" class="modal-close" id="cancel-backup-form" style="position:static;">×</button>
+                            </div>
+                            <form id="backup-form">
+                                <div class="form-group">
+                                    <label for="backup-name">Nom</label>
+                                    <input type="text" id="backup-name" placeholder="Mes fichiers" required>
+                                </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="source-path">Répertoire source</label>
+                                    <div style="display:flex;gap:8px;">
+                                        <input type="text" id="source-path" placeholder="\\serveur\partage" required style="flex:1;">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="dest-type">Type de destination</label>
+                                    <select id="dest-type">
+                                        <option value="dropbox">☁️ Dropbox</option>
+                                        <option value="local">💻 Local</option>
+                                        <option value="network">🌐 Réseau</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group dest-path-group hidden">
+                                <label for="dest-path">Chemin local / réseau</label>
+                                <div style="display:flex;gap:8px;">
+                                    <input type="text" id="dest-path" placeholder="D:\Backups ou \\serveur\partage" style="flex:1;">
+                                    <button type="button" class="btn btn-secondary browse-btn" data-target="dest-path" style="width:auto;padding:12px 16px;">📂</button>
+                                </div>
+                            </div>
+                            <div class="form-group dest-dropbox-group">
+                                <label for="dropbox-path">Chemin Dropbox</label>
+                                <input type="text" id="dropbox-path" placeholder="Backup/dossiers">
+                            </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="schedule-type">Fréquence</label>
+                                        <select id="schedule-type">
+                                            <option value="off">OFF</option>
+                                            <option value="on">ON</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="bidirectional">Mode</label>
+                                        <select id="bidirectional">
+                                            <option value="0">Unidirectionnel</option>
+                                            <option value="1">Bidirectionnel</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="night_only">
+                                            <input type="checkbox" id="night_only" value="1">
+                                            Mode nuit seuleument (20h-6h)
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="exclusions">Fichiers à exclure (un par ligne)</label>
+                                    <textarea id="exclusions" rows="8">.DS_Store
+Thumbs.db
+.~lock.*
+~$*
+*.tmp
+*.temp
+desktop.ini
+Desktop.ini</textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Créer</button>
+                            </form>
+                        </div>
+
+                        <!-- Backups List -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>Sauvegardes configurées</h3>
+                            </div>
+                            <div id="backups-list" class="backup-list"></div>
+                    </section>
+
+                    <!-- Connections Tab -->
+                    <section id="connections-tab" class="tab-content">
+                        <div class="main-header">
+                            <h2>Connexions</h2>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>Dropbox</h3>
+                            </div>
+                            <div id="connections-list" class="connection-list"></div>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>Configurer Dropbox</h3>
+                            </div>
+                            <div class="instructions">
+                                <ol>
+                                    <li>Ouvrez un terminal dans le dossier <strong>Rclone</strong></li>
+                                    <li>Exécutez: <code>rclone authorize dropbox</code></li>
+                                    <li>Suivez les instructions dans le navigateur</li>
+                                    <li>Cliquez sur "Tester la connexion"</li>
+                                </ol>
+                            </div>
+                            <button type="button" id="test-connection-btn" class="btn btn-success">Tester la connexion</button>
+                            <p id="auth-status" style="margin-top: 16px;"></p>
+                        </div>
+                    </section>
+
+                    <!-- Logs Tab -->
+                    <section id="logs-tab" class="tab-content">
+                        <div class="main-header">
+                            <h2>Rapports d'erreurs</h2>
+                            <div class="header-actions">
+                                <button class="btn btn-danger" id="clear-logs-btn">Effacer les logs</button>
+                            </div>
+                        </div>
+                        <div id="logs-list" class="logs-list"></div>
+                    </section>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Backup Modal -->
+    <div id="backup-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <span class="modal-close" id="modal-close">&times;</span>
+            <h2>Modifier la sauvegarde</h2>
+            <form id="edit-backup-form">
+                <input type="hidden" id="edit-backup-id">
+                <div class="form-group">
+                    <label for="edit-name">Nom</label>
+                    <input type="text" id="edit-name" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-source">Répertoire source</label>
+                        <input type="text" id="edit-source" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-dest-type">Type de destination</label>
+                        <select id="edit-dest-type">
+                            <option value="dropbox">☁️ Dropbox</option>
+                            <option value="local">💻 Local</option>
+                            <option value="network">🌐 Réseau</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group edit-dest-path-group hidden">
+                    <label for="edit-dest-path">Chemin local / réseau</label>
+                    <div style="display:flex;gap:8px;">
+                        <input type="text" id="edit-dest-path" placeholder="D:\Backups ou \\serveur\partage" style="flex:1;">
+                        <button type="button" class="btn btn-secondary browse-btn" data-target="edit-dest-path" style="width:auto;padding:12px 16px;">📂</button>
+                    </div>
+                </div>
+                <div class="form-group edit-dest-dropbox-group">
+                    <label for="edit-dest">Chemin Dropbox</label>
+                    <input type="text" id="edit-dest" placeholder="Backup/dossiers">
+                </div>
+                <div class="form-group">
+                    <label for="edit-schedule">Fréquence</label>
+<select id="edit-schedule">
+                                                <option value="off">OFF</option>
+                                                <option value="on">ON</option>
+                                            </select>
+                </div>
+<div class="form-group">
+                        <label for="edit-bidirectional">Mode</label>
+                        <select id="edit-bidirectional">
+                            <option value="0">Unidirectionnel</option>
+                            <option value="1">Bidirectionnel</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-night_only">
+                            <input type="checkbox" id="edit-night_only" value="1">
+                            Mode nuit seulement (20h-6h)
+                        </label>
+                    </div>
+                <div class="form-group">
+                    <label for="edit-exclusions">Exclusions</label>
+                    <textarea id="edit-exclusions" rows="4"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Browse Modal -->
+    <div id="browse-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width:600px;">
+            <span class="modal-close" id="browse-modal-close">&times;</span>
+            <h2>Parcourir</h2>
+            <div style="margin-bottom:12px;display:flex;gap:8px;">
+                <input type="text" id="browse-current-path" readonly style="flex:1;padding:10px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);">
+            </div>
+            <div id="browse-entries" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);"></div>
+            <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" class="btn btn-secondary" id="browse-up-btn" style="width:auto;">⬆ Remonter</button>
+                <button type="button" class="btn btn-primary" id="browse-select-btn" style="width:auto;">Sélectionner</button>
+                <button type="button" class="btn btn-secondary" id="browse-cancel-btn" style="width:auto;">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div id="import-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <span class="modal-close" id="import-modal-close">&times;</span>
+            <h2>Importer des sauvegardes</h2>
+            <div id="import-file-section">
+                <p>Sélectionnez un fichier JSON exporté précédemment :</p>
+                <input type="file" id="import-file-input" accept=".json">
+            </div>
+            <div id="import-list-section" class="hidden">
+                <p>Sélectionnez les sauvegardes à importer :</p>
+                <div id="import-backups-list" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px;"></div>
+                <div style="margin-top: 12px;">
+                    <button type="button" class="btn btn-primary" id="confirm-import-btn">Importer la sélection</button>
+                    <button type="button" class="btn btn-secondary" id="select-all-import-btn">Tout sélectionner</button>
+                    <button type="button" class="btn btn-danger" id="cancel-import-btn">Annuler</button>
+                </div>
+            </div>
+            <p id="import-result" class="hidden" style="margin-top: 16px;"></p>
+        </div>
+    </div>
+
+    <script src="/static/js/app_v12.js"></script>
+</body>
+</html>

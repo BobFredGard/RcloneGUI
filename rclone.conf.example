@@ -1,0 +1,7 @@
+# Copie d'exemple — copier vers rclone.conf puis configurer avec `rclone config`
+# NE JAMAIS commiter le vrai rclone.conf (tokens Dropbox)
+[dropbox]
+type = dropbox
+client_id =
+client_secret =
+token =

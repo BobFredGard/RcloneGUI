@@ -1,0 +1,48 @@
+# Secrets — NE JAMAIS commiter
+rclone.conf
+.env
+instance/
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Logs (fichiers uniquement — le package source logs/*.py reste commité)
+*.log
+scheduler.log
+startup.log
+
+# Rclone binaire (téléchargé séparément, voir README)
+# Le dossier Rclone/ entier est ignoré : recréer avec rclone.exe dedans
+Rclone/
+
+# Exports / sauvegardes locales
+backup_*/
+backups/*.json
+rclone-backups-*.json
+Sauv.bat
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.env/
+pip-log.txt
+.pytest_cache/
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temp
+*.tmp
+*.bak
+*.orig
