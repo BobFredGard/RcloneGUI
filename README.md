@@ -7,7 +7,7 @@ L'application expose une API REST + une interface web permettant de définir des
 et de suivre leur progression en temps réel.
 
 ## Interface
-<img width="1427" height="806" alt="image" src="https://github.com/user-attachments/assets/d0e5d35a-acb5-49ec-b54e-c35170ddc589" />
+<img width="1427" height="806" alt="649321220-d0e5d35a-acb5-49ec-b54e-c35170ddc589" src="https://github.com/user-attachments/assets/59b6b998-ecc1-490c-86f9-4a80e33cdeff" />
 
 ## Fonctionnalités
 
