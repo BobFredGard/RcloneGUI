@@ -6,6 +6,9 @@ L'application expose une API REST + une interface web permettant de définir des
 (source → destination), de les lancer manuellement ou automatiquement (planificateur intégré),
 et de suivre leur progression en temps réel.
 
+## Interface
+<img width="1427" height="806" alt="image" src="https://github.com/user-attachments/assets/d0e5d35a-acb5-49ec-b54e-c35170ddc589" />
+
 ## Fonctionnalités
 
 - Sauvegardes : dossier local / réseau (ex. `D:\Docs`, `\\SERVEUR\Partage`) → Dropbox ou dossier local
