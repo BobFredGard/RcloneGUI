@@ -4,7 +4,7 @@ from backups.service import create_backup, get_all_backups, get_backup, update_b
 from rclone_service import rclone_service
 from models import db, Backup
 from auth.utils import decode_jwt_token
-from config import DEFAULT_EXCLUSIONS
+from config import Config, DEFAULT_EXCLUSIONS
 from functools import wraps
 from datetime import datetime, timezone
 import json
@@ -25,6 +25,23 @@ def require_auth(f):
         return f(*args, **kwargs)
     return decorated
 
+def require_auth_sse(f):
+    # Variante pour EventSource : les navigateurs ne peuvent pas envoyer
+    # de header Authorization en SSE, on accepte donc ?token=<jwt>
+    # en repli (le header reste prioritaire).
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        auth_header = request.headers.get('Authorization')
+        if auth_header and auth_header.startswith('Bearer '):
+            token = auth_header.split(' ')[1]
+        if not token:
+            token = request.args.get('token')
+        if not token or not decode_jwt_token(token):
+            return jsonify({'error': 'Unauthorized'}), 401
+        return f(*args, **kwargs)
+    return decorated
+
 @backups_bp.route('', methods=['GET'])
 @require_auth
 def list_backups():
@@ -37,21 +54,35 @@ def get_running_backups():
     """Get list of running and recently finished backups with their PIDs"""
     running = []
     current_time = time.time()
-
+    
     # Currently running processes
     for backup_id, process in rclone_service.running_processes.items():
         if process.poll() is None:
             running.append({'id': int(backup_id), 'pid': process.pid})
-
+    
     # Recently finished (keep PID for 5 seconds after completion)
     for backup_id, info in rclone_service.recently_finished.items():
         if current_time - info['finish_time'] < 5:
             if not any(r['id'] == int(backup_id) for r in running):
                 running.append({'id': int(backup_id), 'pid': info['pid']})
-
+    
     return jsonify(running), 200
 
-from config import DEFAULT_EXCLUSIONS
+def _is_path_allowed(path):
+    # Intranet : restreint le file-browser à BROWSE_ALLOWED_ROOTS.
+    # Vide = pas de restriction (à resserrer via variable d'env).
+    roots = Config.BROWSE_ALLOWED_ROOTS or []
+    if not roots:
+        return True
+    try:
+        norm = os.path.normcase(os.path.abspath(path))
+        for r in roots:
+            r_norm = os.path.normcase(os.path.abspath(r))
+            if norm == r_norm or norm.startswith(r_norm.rstrip(os.sep) + os.sep):
+                return True
+        return False
+    except Exception:
+        return False
 
 @backups_bp.route('', methods=['POST'])
 @require_auth
@@ -78,10 +109,10 @@ def create():
         bidirectional=data.get('bidirectional', False),
         night_only=data.get('night_only', False)
     )
-
+    
     from scheduler import scheduler_service
     scheduler_service.on_backup_created(backup.id)
-
+    
     return jsonify(backup.to_dict()), 201
 
 @backups_bp.route('/<int:backup_id>', methods=['GET'])
@@ -99,11 +130,11 @@ def modify(backup_id):
     backup = update_backup(backup_id, data)
     if not backup:
         return jsonify({'error': 'Backup not found'}), 404
-
+    
     if data.get('schedule_type') == 'on':
         from scheduler import scheduler_service
         scheduler_service.on_schedule_enabled(backup_id)
-
+    
     return jsonify(backup.to_dict()), 200
 
 @backups_bp.route('/<int:backup_id>', methods=['DELETE'])
@@ -133,10 +164,10 @@ def run(backup_id):
                     started = b.started_at
                 if (now - started).total_seconds() < 300:
                     running_count += 1
-
+        
         if running_count >= 3:
             return jsonify({'error': 'Trop de sauvegardes en cours (maximum 3)'}), 429
-
+        
         backup = get_backup(backup_id)
         if not backup:
             return jsonify({'error': 'Backup not found'}), 404
@@ -162,11 +193,11 @@ def run(backup_id):
         db.session.commit()
 
         result = rclone_service.sync(source, destination, exclusions, backup.id, bidirectional=backup.bidirectional)
-
+        
         if result.get('pid'):
             backup.pid = result['pid']
             db.session.commit()
-
+        
         result = rclone_service.wait_for_backup(backup.id)
 
         backup.last_run = datetime.now(timezone.utc)
@@ -244,6 +275,7 @@ def cancel(backup_id):
         return jsonify({'error': str(e)}), 500
 
 @backups_bp.route('/<int:backup_id>/stream', methods=['GET'])
+@require_auth_sse
 def stream_progress(backup_id):
     def generate():
         while True:
@@ -382,10 +414,17 @@ def browse_directories():
             for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
                 drive = f"{letter}:\\"
                 if os.path.exists(drive):
-                    drives.append(drive)
+                    if _is_path_allowed(drive):
+                        drives.append(drive)
+            # Expose aussi les racines UNC configurées (non détectables via lettres)
+            for r in (Config.BROWSE_ALLOWED_ROOTS or []):
+                if r.startswith('\\\\') and r not in drives:
+                    drives.append(r)
             return jsonify({'drives': drives, 'entries': []}), 200
 
         path = os.path.abspath(path)
+        if not _is_path_allowed(path):
+            return jsonify({'entries': [], 'error': 'Accès refusé (hors racines autorisées)'}), 403
         if not os.path.isdir(path):
             return jsonify({'entries': [], 'error': 'Not a directory'}), 200
 

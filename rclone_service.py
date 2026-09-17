@@ -98,16 +98,14 @@ class RcloneService:
             cmd.append('--resync')
             source_name = source.replace('\\\\', '_').replace('\\', '_').replace(':', '_').replace('/', '_')
             dest_name = destination.replace(':', '_')
-            # Portable: %LOCALAPPDATA%/rclone/bisync, créé si besoin
-            bisync_dir = os.path.join(os.environ.get('LOCALAPPDATA') or os.path.expanduser('~'), 'rclone', 'bisync')
-            if os.path.isdir(bisync_dir):
-                for f in os.listdir(bisync_dir):
-                    if f.endswith('.lck') or f.endswith('.path1.lst') or f.endswith('.path2.lst'):
-                        if source_name in f or dest_name in f:
-                            try:
-                                os.remove(os.path.join(bisync_dir, f))
-                            except:
-                                pass
+            bisync_dir = 'C:/Users/Zique/AppData/Local/rclone/bisync'
+            for f in os.listdir(bisync_dir):
+                if f.endswith('.lck') or f.endswith('.path1.lst') or f.endswith('.path2.lst'):
+                    if source_name in f or dest_name in f:
+                        try:
+                            os.remove(os.path.join(bisync_dir, f))
+                        except:
+                            pass
         if exclusions:
             for exc in exclusions:
                 cmd.extend(['--exclude', exc])

@@ -28,6 +28,11 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        if app.config.get('USING_DEV_SECRET'):
+            app.logger.warning(
+                'SECRET_KEY par défaut utilisée ! '
+                'Définissez SECRET_KEY dans l’environnement pour l’intranet.'
+            )
         scheduler_service.set_app(app)
         scheduler_service.start()
 

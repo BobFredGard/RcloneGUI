@@ -6,8 +6,7 @@ from datetime import datetime, timezone
 from rclone_service import rclone_service
 import logging
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-logging.basicConfig(filename=os.path.join(BASE_DIR, 'scheduler.log'), level=logging.DEBUG)
+logging.basicConfig(filename='D:/ServerFolders/RcloneGUI/scheduler.log', level=logging.DEBUG)
 
 class SchedulerService:
     def __init__(self):

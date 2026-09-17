@@ -63,13 +63,17 @@
                 <aside class="sidebar">
                     <div class="sidebar-header">
                         <h1>Rclone Backup</h1>
-                        <span class="version">v1.0</span>
+                        <span class="version">v1.1</span>
                     </div>
 
                     <nav class="sidebar-nav">
                         <a class="nav-item active" data-tab="backups">
                             <span class="icon">💾</span>
                             Sauvegardes
+                        </a>
+                        <a class="nav-item" data-tab="overview">
+                            <span class="icon">📊</span>
+                            Vue d'ensemble
                         </a>
                         <a class="nav-item" data-tab="connections">
                             <span class="icon">☁️</span>
@@ -183,6 +187,35 @@ Desktop.ini</textarea>
                                 <h3>Sauvegardes configurées</h3>
                             </div>
                             <div id="backups-list" class="backup-list"></div>
+                    </section>
+
+                    <!-- Overview Tab (read-only) -->
+                    <section id="overview-tab" class="tab-content">
+                        <div class="main-header">
+                            <h2>Vue d'ensemble</h2>
+                        </div>
+
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3>Toutes les sauvegardes programmées</h3>
+                                <span id="overview-summary" class="overview-summary"></span>
+                            </div>
+                            <div class="overview-table-wrap">
+                                <table class="overview-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nom</th>
+                                            <th>Statut</th>
+                                            <th>Dernière</th>
+                                            <th>Planifié</th>
+                                            <th>Source</th>
+                                            <th>Destination</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="overview-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </section>
 
                     <!-- Connections Tab -->
@@ -335,6 +368,6 @@ Desktop.ini</textarea>
         </div>
     </div>
 
-    <script src="/static/js/app_v12.js"></script>
+    <script src="/static/js/app_v13.js"></script>
 </body>
 </html>

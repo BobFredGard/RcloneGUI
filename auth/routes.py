@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from models import db, User
 from auth.utils import generate_jwt_token, decode_jwt_token, hash_password, verify_password
 
@@ -6,6 +6,13 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
+    # Mode intranet : le 1er compte est libre (bootstrap), les suivants
+    # sont bloqués sauf ALLOW_REGISTRATION=true. Empêche n'importe quel
+    # poste du LAN de se créer un compte.
+    if not current_app.config.get('ALLOW_REGISTRATION', False):
+        if User.query.count() > 0:
+            return jsonify({'error': 'Inscriptions désactivées'}), 403
+
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
